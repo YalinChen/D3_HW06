@@ -16,7 +16,7 @@
             /* left: 20px; */
             /* top:  100px; */
             background: #fff;
-            width: "60px";
+            width: "300px";
             height: auto;
             padding: 0px 10px;
             border-radius: 5px;
@@ -30,18 +30,35 @@
 </head>
 
 <body>
-       <div>
+    <div>
         <h1>Yalin Chen HW06</h1></div>
-        <div>
-        <h2>HW06-1.區域填色 2.滑鼠與地區豆動 3.按下跳出縣市資訊</h2></div>
+    <div>
+        <h2>HW06-1.區域填色 2.滑鼠與地區互動 3.按下跳出縣市資訊</h2></div>
     <hr>
-   
+
     <div id="tooltip" class="hidden">
         <p><strong id="city">Hello</strong></p>
+        <p id="Rural">Rural</p>
     </div>
 
     <svg width="900" height="800"></svg>
     <script>
+        //偏鄉學校資料: RuralSchool_2015.json
+        d3.csv("RuralSchool_2015.csv", function (DataSet) {
+            //NameArr: 學校名稱(包含重複項目)           
+            var NameArr = DataSet.map(function (d) {
+                return d.Name;
+            });
+            //uniqueNameArr: 學校名稱(無重複項目) 
+            var uniqueNameArr = unique(NameArr);
+
+            //filterNameArr: 學校名稱(去除空白項目) 
+            var filterNameArr = uniqueNameArr.filter(function (d) {
+                return d != "";
+            });
+
+        })
+
         //1.地理資料檔: topoTaiwan.json
         d3.json("topoTaiwan.json", function (topoData) {
 
@@ -67,22 +84,43 @@
                 })
                 .on("mouseout", function (d) {
                     d3.select(this).attr({
-                            fill: tempColor
-                        })
-                        .on("click", function (d) {
-                            var coordinates = d3.mouse(this);
-                            var x = coordinates[0];
-                            var y = coordinates[1];
+                        fill: tempColor
+                    })
+                })
+                .on("click", function (d) {
+                    var coordinates = d3.mouse(this);
+                    var x = coordinates[0];
+                    var y = coordinates[1];
 
-                            var tooltip = d3.select("#tooltip")
-                                .style({
-                                    left: (x+10) + "px",
-                                    top: (y+10) + "px"
-                                });
-                            tooltip.select("#city").text(d.properties.C_Name);
-                            tooltip.classed("hidden", false);
+                    var tooltip = d3.select("#tooltip")
+                        .style({
+                            left: (x + 20) + "px",
+                            top: (y + 120) + "px"
                         });
+                    tooltip.select("#city").text(d.properties.C_Name);
+                    d3.csv("RuralSchool_2015.csv", function (DataSet) {
+
+                        var CityArr = DataSet.map(function (d) {
+                            return d.City;
+                        })
+                        var RuralNumber = 0;
+                        for (var i = 0; i < CityArr.length; i++) {
+                            if (CityArr[i] === d.properties.C_Name) {
+                                RuralNumber = RuralNumber + 1;
+                                //console.log(CityArr);
+                            }
+                        }
+
+                        //console.log(RuralNumber);
+                        tooltip.select("#Rural").text("偏鄉學校數量: "+RuralNumber);
+                    })
+                    
+                    tooltip.classed("hidden", false);
+
                 });
+
+
+
         }
 
         function bind(topoData) {
@@ -101,6 +139,16 @@
             selection.enter().append("path");
             selection.exit().remove();
             selection.classed("map-boundary", true).attr("d", path);
+        }
+
+        function unique(array) {
+            var n = [];
+            for (var i = 0; i < array.length; i++) {
+                if (n.indexOf(array[i]) == -1) {
+                    n.push(array[i]);
+                }
+            }
+            return n;
         }
     </script>
 
